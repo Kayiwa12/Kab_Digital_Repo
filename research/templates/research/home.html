@@ -10,7 +10,10 @@
         <!-- University Crest Graphic -->
         <div class="mb-3 d-flex justify-content-center">
             <div class="p-2 rounded-circle bg-white shadow d-inline-flex align-items-center justify-content-center" style="border: 3px solid #f68b1f; box-shadow: 0 6px 18px rgba(0,0,0,0.25) !important;">
-                <img src="{% static 'img/kabale-logo.png' %}" alt="Kabale University Crest" height="92" width="92">
+                <img src="{% static 'img/kabale-logo.png' %}" alt="Kabale University Crest" height="92" width="92" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                <div style="display: none;">
+                    {% include 'research/crest_svg.html' with size='92' %}
+                </div>
             </div>
         </div>
 
