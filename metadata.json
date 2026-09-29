@@ -1,0 +1,6 @@
+{
+  "name": "Enhanced Research Discovery and Analytics Platform",
+  "description": "Enhanced Research Discovery and Analytics Platform integrated with Kabale University's Institutional Digital Repository (DSpace)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

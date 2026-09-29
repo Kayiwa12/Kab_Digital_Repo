@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Advanced Research Search | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" style="color: #0072bc;" class="text-decoration-none fw-semibold">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'research_list' %}" style="color: #0072bc;" class="text-decoration-none fw-semibold">Research</a></li>
+            <li class="breadcrumb-item active text-black fw-bold" aria-current="page">Advanced Search</li>
+        </ol>
+    </nav>
+
+    <div class="mb-4 pb-2 border-bottom" style="border-bottom: 3px solid #f68b1f !important;">
+        <h2 class="fw-bold text-dark mb-1">Advanced Research Query Builder</h2>
+        <p class="text-muted small mb-0">Construct targeted bibliometric queries across titles, authors, academic units, and chronological spans.</p>
+    </div>
+
+    <!-- Advanced Search Multi-Field Form -->
+    <div class="card academic-card p-4 mb-4 shadow-sm" style="border-top: 4px solid #0072bc;">
+        <form method="get" action="{% url 'advanced_search' %}" id="advancedSearchForm">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="id_title" class="form-label small fw-semibold text-dark">Title Contains</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-file-earmark-text"></i></span>
+                        <input type="text" id="id_title" name="title" value="{{ current_params.title|default:'' }}" class="form-control" placeholder="e.g., Performance, Internal Audit, Quality Education">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="id_author" class="form-label small fw-semibold text-dark">Author / Researcher Name</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                        <input type="text" id="id_author" name="author" value="{{ current_params.author|default:'' }}" class="form-control" placeholder="e.g., Tumusiime, Mugisha, Kyomugisha">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="id_keyword" class="form-label small fw-semibold text-dark">Subject / Keyword</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-tag"></i></span>
+                        <input type="text" id="id_keyword" name="keyword" value="{{ current_params.keyword|default:'' }}" class="form-control" placeholder="e.g., Governance, Microfinance, Accounting">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="id_faculty" class="form-label small fw-semibold text-dark">Faculty / Academic Unit</label>
+                    <select id="id_faculty" name="faculty" class="form-select">
+                        <option value="">All Academic Units</option>
+                        {% for fac in faculties %}
+                            <option value="{{ fac.name }}" {% if current_params.faculty == fac.name or current_params.faculty == fac.id|stringformat:"i" %}selected{% endif %}>
+                                {{ fac.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="id_year_from" class="form-label small fw-semibold text-dark">Publication Year From</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-calendar-event"></i></span>
+                        <input type="number" id="id_year_from" name="year_from" min="1990" max="2030" value="{{ current_params.year_from|default:'' }}" class="form-control" placeholder="e.g., 2018">
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="id_year_to" class="form-label small fw-semibold text-dark">Publication Year To</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-calendar-event"></i></span>
+                        <input type="number" id="id_year_to" name="year_to" min="1990" max="2030" value="{{ current_params.year_to|default:'' }}" class="form-control" placeholder="e.g., 2025">
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="id_sort" class="form-label small fw-semibold text-dark">Sort Results</label>
+                    <select id="id_sort" name="sort" class="form-select">
+                        <option value="relevance" {% if current_params.sort == 'relevance' %}selected{% endif %}>Relevance Ranking</option>
+                        <option value="newest" {% if current_params.sort == 'newest' %}selected{% endif %}>Newest Year First</option>
+                        <option value="oldest" {% if current_params.sort == 'oldest' %}selected{% endif %}>Oldest Year First</option>
+                        <option value="title" {% if current_params.sort == 'title' %}selected{% endif %}>Title (Alphabetical)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <a href="{% url 'advanced_search' %}" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filters
+                </a>
+                <button type="submit" class="btn kabale-green-btn px-4 fw-semibold">
+                    <i class="bi bi-search me-1"></i> Search Research
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    {% if has_submitted %}
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-dark mb-0">Search Results ({{ results.total_count }} found)</h5>
+        </div>
+
+        {% if results.page_obj %}
+            <div class="d-flex flex-column gap-3 mb-4">
+                {% for item in results.page_obj %}
+                <div class="card academic-card p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            {% if item.faculty_name %}
+                                <span class="badge badge-faculty">{{ item.faculty_name }}</span>
+                            {% endif %}
+                            <span class="badge badge-year">{{ item.publication_year|default:"N/A" }}</span>
+                            <span class="badge bg-light text-secondary border">{{ item.item_type }}</span>
+                        </div>
+                        {% if item.handle %}
+                            <span class="small text-muted font-monospace" style="font-size: 0.75rem;">Handle: {{ item.handle }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="fw-bold mb-2">
+                        <a href="{% url 'research_detail' item.dspace_uuid %}" class="text-dark text-decoration-none hover-underline">
+                            {{ item.title }}
+                        </a>
+                    </h5>
+
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-person me-1 text-success"></i> {{ item.authors_display }}
+                    </p>
+
+                    <p class="text-secondary small mb-3">
+                        {{ item.short_abstract }}
+                    </p>
+
+                    <div class="pt-2 border-top d-flex justify-content-between align-items-center">
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'research_detail' item.dspace_uuid %}" class="btn btn-sm kabale-green-btn px-3">
+                                <i class="bi bi-file-earmark-text me-1"></i> View Research
+                            </a>
+                            <a href="{{ item.get_dspace_direct_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary px-3">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> DSpace Record
+                            </a>
+                        </div>
+                        <a href="{% url 'research_detail' item.dspace_uuid %}#related-research" class="small text-success fw-semibold text-decoration-none">
+                            <i class="bi bi-diagram-3 me-1"></i> Related Studies
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if results.page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if results.page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link text-success" href="?page={{ results.page_obj.previous_page_number }}&{{ request.GET.urlencode }}">&laquo; Previous</a></li>
+                    {% endif %}
+                    {% for num in results.page_obj.paginator.page_range %}
+                        {% if results.page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link bg-success border-success">{{ num }}</span></li>
+                        {% elif num > results.page_obj.number|add:'-3' and num < results.page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link text-success" href="?page={{ num }}&{{ request.GET.urlencode }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if results.page_obj.has_next %}
+                        <li class="page-item"><a class="page-link text-success" href="?page={{ results.page_obj.next_page_number }}&{{ request.GET.urlencode }}">Next &raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+        {% else %}
+            <div class="card academic-card p-5 text-center">
+                <div class="mb-3 text-muted">
+                    <i class="bi bi-search display-5 opacity-50 text-warning"></i>
+                </div>
+                <h5 class="fw-bold text-dark">No records matched this advanced query</h5>
+                <p class="text-muted small mx-auto" style="max-width: 450px;">
+                    Try clearing one or more constraints such as the specific year span or exact author spelling to broaden results.
+                </p>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

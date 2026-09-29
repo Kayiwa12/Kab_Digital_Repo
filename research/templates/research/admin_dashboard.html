@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Administrator Dashboard | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" style="color: #0072bc;" class="text-decoration-none fw-semibold">Home</a></li>
+            <li class="breadcrumb-item active text-black fw-bold" aria-current="page">Admin Dashboard</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom" style="border-bottom: 3px solid #f68b1f !important;">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">DSpace Synchronization &amp; Control Panel</h2>
+            <p class="text-muted small mb-0">Monitor repository ingestion pipelines, inspect API connectivity, and trigger on-demand sync tasks.</p>
+        </div>
+        <div class="mt-2 mt-md-0 d-flex gap-2">
+            <a href="{% url 'admin_sync_logs' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-journal-text me-1"></i> Full Audit Logs
+            </a>
+            <a href="/admin/" target="_blank" class="btn btn-sm btn-outline-dark">
+                <i class="bi bi-database me-1"></i> Django Admin Site
+            </a>
+        </div>
+    </div>
+
+    <!-- System Usability & Quick Control Banner -->
+    <div class="alert alert-light border shadow-sm p-3 mb-4 rounded-3" style="border-left: 5px solid #006633 !important; background-color: #f8fafc;">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <div class="fw-bold text-black d-flex align-items-center gap-2" style="font-size: 1rem;">
+                    <span class="badge bg-forest-green text-white">System Active &amp; Ready</span>
+                    <span>Kabale University Institutional Discovery System</span>
+                </div>
+                <div class="small text-muted mt-1">
+                    You have full administrative privileges. You can trigger live synchronization, explore all research data, test advanced filters, and review empirical bibliometrics with zero barriers.
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'research_list' %}" class="btn btn-sm btn-outline-dark">Browse Catalog</a>
+                <a href="{% url 'analytics' %}" class="btn btn-sm btn-outline-dark">View Analytics</a>
+                <a href="{% url 'coverage' %}" class="btn btn-sm btn-outline-dark">Coverage Matrix</a>
+                <a href="{% url 'trends' %}" class="btn btn-sm btn-outline-dark">Research Trends</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Diagnostics & Health Cards -->
+    <div class="row g-3 mb-4">
+        <!-- DSpace API Status -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card academic-card p-3 h-100">
+                <div class="small text-muted fw-semibold text-uppercase">DSpace API Connectivity</div>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                    {% if conn_status.status == 'connected' %}
+                        <span class="badge bg-success p-2 rounded-circle"><i class="bi bi-check-lg"></i></span>
+                        <div>
+                            <div class="fw-bold text-success">CONNECTED (200 OK)</div>
+                            <small class="text-muted">backend.kab.ac.ug</small>
+                        </div>
+                    {% else %}
+                        <span class="badge bg-danger p-2 rounded-circle"><i class="bi bi-x-lg"></i></span>
+                        <div>
+                            <div class="fw-bold text-danger">DISCONNECTED</div>
+                            <small class="text-muted">{{ conn_status.error|truncatechars:25 }}</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Total Records -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card academic-card p-3 h-100">
+                <div class="small text-muted fw-semibold text-uppercase">Indexed Database Records</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ stats.total_records }}</div>
+                <small class="text-secondary">{{ stats.total_faculties }} faculties &middot; {{ stats.total_researchers }} authors</small>
+            </div>
+        </div>
+
+        <!-- Last Sync Time -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card academic-card p-3 h-100">
+                <div class="small text-muted fw-semibold text-uppercase">Latest Synchronization</div>
+                {% if sync_logs %}
+                    {% with latest=sync_logs|first %}
+                        <div class="fw-bold text-dark mt-2" style="font-size: 0.95rem;">
+                            {{ latest.started_at|date:"Y-m-d H:i" }} UTC
+                        </div>
+                        <div>
+                            <span class="badge bg-{% if latest.status == 'success' %}success{% elif latest.status == 'partial' %}warning{% else %}danger{% endif %} mt-1">
+                                {{ latest.status|title }} ({{ latest.duration_seconds }}s)
+                            </span>
+                        </div>
+                    {% endwith %}
+                {% else %}
+                    <div class="text-muted small mt-2">No sync executed yet.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Ingestion Target -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card academic-card p-3 h-100">
+                <div class="small text-muted fw-semibold text-uppercase">Target Community</div>
+                <div class="fw-bold text-dark mt-1 text-truncate" title="Directorate of Postgraduate Studies">
+                    Postgraduate Studies
+                </div>
+                <small class="text-muted font-monospace" style="font-size: 0.72rem;">95cbea8b...4f12</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trigger On-Demand Synchronization -->
+    <div class="card academic-card p-4 mb-4 border-success border-opacity-50">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-repeat text-success"></i> Trigger Repository Synchronization
+                </h5>
+                <p class="text-muted small mb-0">
+                    Connects directly to Kabale University's DSpace API, iterates over discovery pages, normalizes metadata, and updates the local research index.
+                </p>
+            </div>
+
+            <form method="post" action="{% url 'admin_trigger_sync' %}" class="d-flex align-items-center gap-2">
+                {% csrf_token %}
+                <div style="min-width: 130px;">
+                    <select name="max_pages" class="form-select form-select-sm" title="Limit pages (leave empty for full sync)">
+                        <option value="">All Pages (Full Sync)</option>
+                        <option value="1">1 Page (20 Items)</option>
+                        <option value="2">2 Pages (40 Items)</option>
+                        <option value="5">5 Pages (100 Items)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn kabale-green-btn btn-sm px-3 fw-bold text-nowrap" onclick="return confirm('Trigger live DSpace synchronization now?');">
+                    <i class="bi bi-cloud-arrow-down-fill me-1"></i> Sync Now
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Sync Logs Table -->
+    <div class="card academic-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark mb-0">Recent Synchronization History</h5>
+            <a href="{% url 'admin_sync_logs' %}" class="small text-success text-decoration-none">View All Logs</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Started At</th>
+                        <th>Triggered By</th>
+                        <th>Status</th>
+                        <th>Discovered</th>
+                        <th>Created</th>
+                        <th>Updated</th>
+                        <th>Unchanged</th>
+                        <th>Errors</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in sync_logs %}
+                    <tr>
+                        <td class="fw-semibold">{{ log.started_at|date:"Y-m-d H:i:s" }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ log.triggered_by }}</span></td>
+                        <td>
+                            <span class="badge bg-{% if log.status == 'success' %}success{% elif log.status == 'partial' %}warning{% else %}danger{% endif %}">
+                                {{ log.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ log.records_discovered }}</td>
+                        <td class="text-success fw-bold">+{{ log.records_created }}</td>
+                        <td class="text-primary">{{ log.records_updated }}</td>
+                        <td class="text-muted">{{ log.records_unchanged }}</td>
+                        <td>
+                            {% if log.errors_count > 0 %}
+                                <span class="badge bg-danger">{{ log.errors_count }}</span>
+                            {% else %}
+                                <span class="text-muted">0</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.duration_seconds }}s</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            No synchronization sessions recorded yet. Use the "Sync Now" button above or the management command to execute the first ingestion.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

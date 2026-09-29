@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Repository Analytics Dashboard | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-success text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Analytics Dashboard</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Kabale University Repository Analytics</h2>
+            <p class="text-muted small mb-0">Empirical metrics and bibliometric distributions computed exclusively from indexed DSpace records.</p>
+        </div>
+        <div class="mt-2 mt-md-0 d-flex align-items-center gap-2">
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                <i class="bi bi-clock-history me-1"></i> Real-Time Database Metrics
+            </span>
+        </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="card academic-card p-3 mb-4 bg-light shadow-sm">
+        <form method="get" action="{% url 'analytics' %}" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <label for="facultySelect" class="small fw-semibold text-dark me-2">Filter Analytics by Faculty:</label>
+                <select id="facultySelect" name="faculty" class="form-select form-select-sm d-inline-block shadow-none" onchange="this.form.submit()">
+                    <option value="">All Faculties & Units</option>
+                    {% for fac in faculties %}
+                        <option value="{{ fac.id }}" {% if selected_faculty_id == fac.id %}selected{% endif %}>
+                            {{ fac.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-7 d-flex justify-content-md-end align-items-center gap-2">
+                {% if selected_faculty_id %}
+                    <a href="{% url 'analytics' %}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-x-circle me-1"></i> Reset Filter
+                    </a>
+                {% endif %}
+                <span class="small text-muted">Chronological Span: {{ stats.min_year }} - {{ stats.max_year }}</span>
+            </div>
+        </form>
+    </div>
+
+    <!-- KPI Summary Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="kpi-box">
+                <div class="kpi-value">{{ stats.total_records }}</div>
+                <div class="kpi-label">Research Items</div>
+                <small class="text-muted" style="font-size: 0.72rem;">Indexed theses/dissertations</small>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-box gold-accent">
+                <div class="kpi-value">{{ stats.total_researchers }}</div>
+                <div class="kpi-label">Researchers</div>
+                <small class="text-muted" style="font-size: 0.72rem;">Scholarly contributors</small>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-box">
+                <div class="kpi-value">{{ stats.total_faculties }}</div>
+                <div class="kpi-label">Faculties</div>
+                <small class="text-muted" style="font-size: 0.72rem;">Academic departments</small>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-box gold-accent">
+                <div class="kpi-value">{{ stats.total_collections }}</div>
+                <div class="kpi-label">Collections</div>
+                <small class="text-muted" style="font-size: 0.72rem;">Repository partitions</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1: Year Trend & Faculty Distribution -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card academic-card h-100 p-3">
+                <div class="card-header card-header-academic py-2 px-1 bg-transparent d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-bar-chart-line text-success me-1"></i> Research Output by Year</span>
+                    <span class="badge bg-light text-muted border">Annual Volume</span>
+                </div>
+                <div class="card-body p-2" style="position: relative; height: 320px;">
+                    <canvas id="yearChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card academic-card h-100 p-3">
+                <div class="card-header card-header-academic py-2 px-1 bg-transparent d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-pie-chart text-success me-1"></i> Research Distribution by Faculty</span>
+                    <span class="badge bg-light text-muted border">Comparative Share</span>
+                </div>
+                <div class="card-body p-2" style="position: relative; height: 320px;">
+                    <canvas id="facultyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2: Top Keywords / Subject Themes -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card academic-card p-3">
+                <div class="card-header card-header-academic py-2 px-1 bg-transparent d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-tags text-success me-1"></i> Most Frequent Research Topics & Keywords</span>
+                    <small class="text-muted">Normalized subject metadata excluding academic stopwords</small>
+                </div>
+                <div class="card-body p-2" style="position: relative; height: 350px;">
+                    <canvas id="keywordChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scientific Methodology Caveat -->
+    <div class="alert alert-light border p-3 small text-muted">
+        <div class="fw-bold text-dark mb-1"><i class="bi bi-info-circle text-primary me-1"></i> Data Integrity & Analytics Scope</div>
+        All visualizations reflect verified metadata records synchronized from the Kabale University DSpace REST API. No generative models or speculative extrapolations are applied to chart statistics.
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Year Output Bar Chart
+    const yearLabels = {{ year_labels_json|safe }};
+    const yearCounts = {{ year_counts_json|safe }};
+    
+    const yearCtx = document.getElementById('yearChart').getContext('2d');
+    new Chart(yearCtx, {
+        type: 'bar',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Indexed Research Works',
+                data: yearCounts,
+                backgroundColor: '#0d5c3a',
+                borderColor: '#083b25',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` Works: ${ctx.raw}`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+
+    // 2. Faculty Distribution Horizontal Bar Chart
+    const facLabels = {{ faculty_labels_json|safe }};
+    const facFullNames = {{ faculty_full_names_json|safe }};
+    const facCounts = {{ faculty_counts_json|safe }};
+
+    const facCtx = document.getElementById('facultyChart').getContext('2d');
+    new Chart(facCtx, {
+        type: 'doughnut',
+        data: {
+            labels: facLabels,
+            datasets: [{
+                data: facCounts,
+                backgroundColor: [
+                    '#0d5c3a', '#d49722', '#167a4e', '#eab308', '#0f766e', 
+                    '#b45309', '#047857', '#ca8a04', '#065f46', '#78350f'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { boxWidth: 12, font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: (items) => facFullNames[items[0].dataIndex] || items[0].label,
+                        label: (ctx) => ` Theses: ${ctx.raw}`
+                    }
+                }
+            }
+        }
+    });
+
+    // 3. Top Keywords Chart
+    const kwLabels = {{ keyword_labels_json|safe }};
+    const kwCounts = {{ keyword_counts_json|safe }};
+
+    const kwCtx = document.getElementById('keywordChart').getContext('2d');
+    new Chart(kwCtx, {
+        type: 'bar',
+        data: {
+            labels: kwLabels,
+            datasets: [{
+                label: 'Occurrences in Indexed Works',
+                data: kwCounts,
+                backgroundColor: '#d49722',
+                borderColor: '#b57c15',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

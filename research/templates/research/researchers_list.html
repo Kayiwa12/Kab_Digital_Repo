@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Researchers Directory | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-success text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Researchers Directory</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Kabale University Researchers & Authors</h2>
+            <p class="text-muted small mb-0">Index of postgraduate scholars, researchers, and dissertation authors identified from repository records.</p>
+        </div>
+        <div class="text-muted small">
+            Total Indexed: <strong class="text-dark">{{ total_count }}</strong>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card academic-card p-3 mb-4 shadow-sm">
+        <form method="get" action="{% url 'researchers_list' %}" class="row g-2">
+            <div class="col-md-7">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0">
+                        <i class="bi bi-person-search text-success"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control border-start-0 ps-0 shadow-none" placeholder="Search author by name (e.g., Tumusiime, Mugisha)...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="faculty" class="form-select shadow-none">
+                    <option value="">All Associated Faculties</option>
+                    {% for fac in faculties %}
+                        <option value="{{ fac.name }}" {% if faculty_filter == fac.name %}selected{% endif %}>
+                            {{ fac.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1 d-grid">
+                <button type="submit" class="btn kabale-green-btn fw-semibold">
+                    Find
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Researchers Grid -->
+    {% if page_obj %}
+        <div class="row g-3">
+            {% for r in page_obj %}
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="card academic-card h-100 p-3 d-flex flex-column text-center">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle" style="width: 58px; height: 58px;">
+                        <i class="bi bi-person fs-3"></i>
+                    </div>
+
+                    <h6 class="fw-bold text-dark mb-1" style="min-height: 2.4rem;">
+                        <a href="{% url 'researcher_detail' r.id %}" class="text-dark text-decoration-none hover-underline">
+                            {{ r.name }}
+                        </a>
+                    </h6>
+
+                    <div class="mb-3">
+                        <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-2 py-1">
+                            {{ r.research_count }} Indexed {% if r.research_count == 1 %}Work{% else %}Works{% endif %}
+                        </span>
+                    </div>
+
+                    <a href="{% url 'researcher_detail' r.id %}" class="btn btn-sm btn-outline-success mt-auto">
+                        View Portfolio <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Researchers pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link text-success" href="?page={{ page_obj.previous_page_number }}&q={{ query|urlencode }}&faculty={{ faculty_filter|urlencode }}">&laquo; Previous</a></li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link bg-success border-success">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link text-success" href="?page={{ num }}&q={{ query|urlencode }}&faculty={{ faculty_filter|urlencode }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link text-success" href="?page={{ page_obj.next_page_number }}&q={{ query|urlencode }}&faculty={{ faculty_filter|urlencode }}">Next &raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="card academic-card p-5 text-center">
+            <p class="text-muted mb-0">No researchers found matching your query.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

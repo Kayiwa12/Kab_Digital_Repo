@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Research Catalog & Discovery | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="fw-semibold" style="color: #0072bc;">Home</a></li>
+            <li class="breadcrumb-item active text-black fw-bold" aria-current="page">Research Discovery</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom" style="border-bottom-color: #f68b1f !important; border-bottom-width: 3px !important;">
+        <div>
+            <h2 class="fw-bold text-black mb-1">Postgraduate Research Discovery</h2>
+            <p class="text-muted small mb-0">Search, filter, and explore indexed academic theses and dissertations from Kabale University IDR.</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <a href="{% url 'advanced_search' %}" class="btn btn-sm btn-outline-dark" style="border-color: #0072bc; color: #0072bc;">
+                <i class="bi bi-sliders me-1"></i> Advanced Search
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Form Bar -->
+    <div class="card academic-card p-3 mb-4 shadow-sm border" style="border-left: 4px solid #f68b1f !important;">
+        <form method="get" action="{% url 'research_list' %}" class="row g-2 align-items-center">
+            <div class="col-lg-6 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0" style="color: #0072bc !important;">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ current_params.q|default:'' }}" class="form-control border-start-0 ps-0 shadow-none" placeholder="Search keywords, title, author, abstract...">
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <select name="faculty" class="form-select shadow-none">
+                    <option value="">All Faculties & Units</option>
+                    {% for fac in faculties %}
+                        <option value="{{ fac.id }}" {% if current_params.faculty == fac.id|stringformat:"i" or current_params.faculty == fac.name %}selected{% endif %}>
+                            {{ fac.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <select name="sort" class="form-select shadow-none">
+                    <option value="relevance" {% if current_params.sort == 'relevance' or not current_params.sort %}selected{% endif %}>Sort: Relevance</option>
+                    <option value="newest" {% if current_params.sort == 'newest' %}selected{% endif %}>Sort: Newest First</option>
+                    <option value="oldest" {% if current_params.sort == 'oldest' %}selected{% endif %}>Sort: Oldest First</option>
+                    <option value="title" {% if current_params.sort == 'title' %}selected{% endif %}>Sort: Title (A-Z)</option>
+                </select>
+            </div>
+
+            <div class="col-lg-1 col-md-12 d-grid">
+                <button type="submit" class="btn kabale-green-btn fw-bold">
+                    Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Facets Filters -->
+        <div class="col-lg-3 col-md-4">
+            <!-- Active Filters Reset -->
+            {% if current_params.q or current_params.faculty or current_params.collection or current_params.year_from or current_params.year_to or current_params.sort != 'relevance' %}
+            <div class="card academic-card p-3 mb-3 bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong class="small text-dark">Active Filters</strong>
+                    <a href="{% url 'research_list' %}" class="small text-danger text-decoration-none fw-semibold">
+                        <i class="bi bi-x-circle me-1"></i> Clear All
+                    </a>
+                </div>
+                <div class="d-flex flex-wrap gap-1">
+                    {% if current_params.q %}
+                        <span class="badge bg-secondary">Query: "{{ current_params.q }}"</span>
+                    {% endif %}
+                    {% if current_params.faculty %}
+                        <span class="badge bg-success">Faculty Filtered</span>
+                    {% endif %}
+                    {% if current_params.year_from or current_params.year_to %}
+                        <span class="badge bg-dark">Year: {{ current_params.year_from|default:"*" }} - {{ current_params.year_to|default:"*" }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Faculty Facets -->
+            <div class="card academic-card mb-3">
+                <div class="card-header card-header-academic py-2 px-3 small fw-bold">
+                    <i class="bi bi-building me-1 text-success"></i> Faculties / Collections
+                </div>
+                <div class="list-group list-group-flush small" style="max-height: 280px; overflow-y: auto;">
+                    <a href="{% url 'research_list' %}?q={{ current_params.q|urlencode }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not current_params.faculty %}active bg-success text-white border-success{% endif %}">
+                        <span>All Faculties</span>
+                        <span class="badge rounded-pill {% if not current_params.faculty %}bg-white text-success{% else %}bg-light text-dark{% endif %}">
+                            {{ total_count }}
+                        </span>
+                    </a>
+                    {% for ff in faculty_facets %}
+                    <a href="{% url 'research_list' %}?faculty={{ ff.faculty_name|urlencode }}&q={{ current_params.q|urlencode }}&sort={{ current_params.sort|default:'relevance' }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if current_params.faculty == ff.faculty_name %}active bg-success text-white border-success{% endif %}">
+                        <span class="text-truncate" style="max-width: 170px;" title="{{ ff.faculty_name }}">
+                            {{ ff.faculty_name }}
+                        </span>
+                        <span class="badge rounded-pill {% if current_params.faculty == ff.faculty_name %}bg-white text-success{% else %}bg-light text-dark{% endif %}">
+                            {{ ff.count }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Publication Year Facets -->
+            <div class="card academic-card mb-3">
+                <div class="card-header card-header-academic py-2 px-3 small fw-bold">
+                    <i class="bi bi-calendar3 me-1 text-success"></i> Publication Year
+                </div>
+                <div class="list-group list-group-flush small">
+                    {% for yf in year_facets %}
+                    <a href="{% url 'research_list' %}?year_from={{ yf.publication_year }}&year_to={{ yf.publication_year }}&faculty={{ current_params.faculty|urlencode }}&q={{ current_params.q|urlencode }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if current_params.year_from == yf.publication_year|stringformat:'i' and current_params.year_to == yf.publication_year|stringformat:'i' %}active bg-success text-white border-success{% endif %}">
+                        <span>{{ yf.publication_year }}</span>
+                        <span class="badge rounded-pill {% if current_params.year_from == yf.publication_year|stringformat:'i' and current_params.year_to == yf.publication_year|stringformat:'i' %}bg-white text-success{% else %}bg-light text-dark{% endif %}">
+                            {{ yf.count }}
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="p-3 text-muted small">No year metadata available.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Research Items Results Column -->
+        <div class="col-lg-9 col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="text-muted small">
+                    Showing <strong>{{ page_obj.start_index|default:0 }}</strong> to <strong>{{ page_obj.end_index|default:0 }}</strong> of <strong>{{ total_count }}</strong> research records
+                </div>
+            </div>
+
+            {% if page_obj %}
+                <div class="d-flex flex-column gap-3">
+                    {% for item in page_obj %}
+                    <div class="card academic-card p-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                {% if item.faculty_name %}
+                                    <span class="badge badge-faculty">{{ item.faculty_name }}</span>
+                                {% endif %}
+                                <span class="badge badge-year">Year: {{ item.publication_year|default:"N/A" }}</span>
+                                <span class="badge bg-light text-secondary border">{{ item.item_type|default:"Thesis" }}</span>
+                            </div>
+                            {% if item.handle %}
+                                <span class="small text-muted font-monospace" style="font-size: 0.75rem;">
+                                    Handle: {{ item.handle }}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="fw-bold mb-2">
+                            <a href="{% url 'research_detail' item.dspace_uuid %}" class="text-dark text-decoration-none hover-underline">
+                                {{ item.title }}
+                            </a>
+                        </h5>
+
+                        <div class="text-muted small mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-people-fill text-success"></i>
+                            <span>{{ item.authors_display }}</span>
+                        </div>
+
+                        <p class="text-secondary small mb-3" style="line-height: 1.6;">
+                            {{ item.short_abstract }}
+                        </p>
+
+                        <!-- Keywords Pills -->
+                        {% if item.keywords %}
+                        <div class="mb-3 d-flex flex-wrap">
+                            {% for kw in item.keywords|slice:":6" %}
+                                <a href="{% url 'research_list' %}?q={{ kw|urlencode }}" class="badge-keyword">
+                                    {{ kw }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="pt-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'research_detail' item.dspace_uuid %}" class="btn btn-sm kabale-blue-btn px-3">
+                                    <i class="bi bi-file-earmark-text me-1"></i> View Research
+                                </a>
+                                <a href="{{ item.get_dspace_direct_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary px-3" title="Open authoritative record in Kabale University Repository">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> View Original DSpace Record
+                                </a>
+                            </div>
+
+                            <a href="{% url 'research_detail' item.dspace_uuid %}#related-research" class="small fw-semibold text-decoration-none" style="color: #006633;">
+                                <i class="bi bi-diagram-3 me-1"></i> Find Related Works
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination Navigation -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Research records pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" style="color: #003399;" href="?page={{ page_obj.previous_page_number }}&{{ query_string|default:'' }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo; Previous</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active" aria-current="page"><span class="page-link" style="background-color: #003399; border-color: #003399; color: #FFFFFF;">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" style="color: #003399;" href="?page={{ num }}&{{ query_string|default:'' }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" style="color: #003399;" href="?page={{ page_obj.next_page_number }}&{{ query_string|default:'' }}" aria-label="Next">
+                                    <span aria-hidden="true">Next &raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+            {% else %}
+                <!-- Empty State (Section 31) -->
+                <div class="card academic-card p-5 text-center">
+                    <div class="mb-3 text-muted">
+                        <i class="bi bi-search display-4 opacity-50 text-warning"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">No research records match your search</h4>
+                    <p class="text-muted small mx-auto mb-4" style="max-width: 500px;">
+                        We could not find any indexed postgraduate records matching your specified criteria. Try broadening your keywords, clearing filters, or browsing by faculty.
+                    </p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'research_list' %}" class="btn kabale-green-btn px-4">
+                            Clear Filters & View All
+                        </a>
+                        <a href="{% url 'advanced_search' %}" class="btn btn-outline-secondary px-4">
+                            Try Advanced Search
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

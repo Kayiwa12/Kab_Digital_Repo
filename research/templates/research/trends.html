@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Research Trend Explorer | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-success text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'analytics' %}" class="text-success text-decoration-none">Analytics</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Research Trends</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Research Trend Explorer</h2>
+            <p class="text-muted small mb-0">Trace historical and emerging topic momentum across publication years in Kabale University repository.</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                <i class="bi bi-graph-up me-1"></i> Longitudinal Analysis
+            </span>
+        </div>
+    </div>
+
+    <!-- Topic Selection & Custom Search Form -->
+    <div class="card academic-card p-4 mb-4 shadow-sm">
+        <form method="get" action="{% url 'trends' %}" class="row g-3">
+            <div class="col-md-7">
+                <label for="id_trend_topic" class="form-label small fw-semibold text-dark">Analyze Research Topic or Keyword</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted">
+                        <i class="bi bi-activity text-success"></i>
+                    </span>
+                    <input type="text" id="id_trend_topic" name="topic" value="{{ topic }}" class="form-control" placeholder="Enter topic (e.g., Accounting, Health, Education)..." required>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label for="id_trend_faculty" class="form-label small fw-semibold text-dark">Filter by Faculty (Optional)</label>
+                <select id="id_trend_faculty" name="faculty" class="form-select">
+                    <option value="">All Faculties</option>
+                    {% for fac in faculties %}
+                        <option value="{{ fac.id }}" {% if selected_faculty_id == fac.id %}selected{% endif %}>{{ fac.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn kabale-green-btn w-100 fw-semibold">
+                    Explore Trend
+                </button>
+            </div>
+        </form>
+
+        <!-- Suggested Preset Topics Pills -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-3 border-top small">
+            <span class="text-muted fw-semibold">Suggested Fields:</span>
+            {% for preset in preset_topics %}
+                <a href="{% url 'trends' %}?topic={{ preset|urlencode }}" class="badge {% if topic == preset %}bg-success text-white{% else %}text-bg-light text-dark border{% endif %} text-decoration-none px-2 py-1">
+                    {{ preset }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Trend Visualizer Card -->
+    <div class="card academic-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-0">Longitudinal Output for: "{{ topic }}"</h5>
+                <small class="text-muted">Total Indexed Publications Matching Keyword: <strong>{{ trend_data.total_matches }}</strong></small>
+            </div>
+            {% if trend_data.total_matches > 0 %}
+                <a href="{% url 'research_list' %}?q={{ topic|urlencode }}" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-journal-text me-1"></i> View All {{ trend_data.total_matches }} Records
+                </a>
+            {% endif %}
+        </div>
+
+        {% if trend_data.total_matches > 0 %}
+            <div style="position: relative; height: 350px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-graph-down display-5 opacity-25 d-block mb-2"></i>
+                <p class="mb-1 fw-semibold text-dark">No historical records found for "{{ topic }}"</p>
+                <small class="text-muted">Try selecting one of the suggested academic fields above or search for broader terminology.</small>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if trend_data.total_matches > 0 %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const labels = {{ labels_json|safe }};
+    const counts = {{ counts_json|safe }};
+
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Publications per Year',
+                data: counts,
+                borderColor: '#0d5c3a',
+                backgroundColor: 'rgba(13, 92, 58, 0.12)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#d49722',
+                pointBorderColor: '#ffffff',
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` Indexed Research: ${ctx.raw}`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

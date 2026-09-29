@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About & Methodology | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-success text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">About Platform & Methodology</li>
+        </ol>
+    </nav>
+
+    <div class="mb-4 pb-2 border-bottom">
+        <div class="hero-subtitle mb-1 text-success">Institutional Knowledge Infrastructure</div>
+        <h2 class="fw-bold text-dark mb-1">About the Research Discovery & Analytics Platform</h2>
+        <p class="text-muted small mb-0">Architectural principles, DSpace REST API integration, and mathematical text similarity methodology.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Institutional Mission -->
+            <div class="card academic-card p-4 mb-4">
+                <h4 class="fw-bold text-dark mb-3">1. Institutional Context & Purpose</h4>
+                <p class="text-secondary" style="line-height: 1.7;">
+                    Kabale University's Institutional Digital Repository (IDR), powered by DSpace, preserves and disseminates the scholarly output of the university, including postgraduate dissertations, faculty publications, and institutional conference proceedings.
+                </p>
+                <p class="text-secondary" style="line-height: 1.7;">
+                    This platform serves as an <strong>Enhanced Discovery and Bibliometric Layer</strong> deployed atop the repository. By extracting, normalizing, and indexing metadata via DSpace’s official REST API, the platform provides advanced multifaceted search, historical trend analytics, author portfolios, and mathematical similarity matching without altering the authoritative preservation role of DSpace.
+                </p>
+            </div>
+
+            <!-- Authoritative Repository Relationship -->
+            <div class="card academic-card p-4 mb-4">
+                <h4 class="fw-bold text-dark mb-3">2. Relationship with Kabale University DSpace</h4>
+                <div class="alert alert-light border d-flex gap-3 align-items-start mb-3">
+                    <i class="bi bi-shield-check text-success fs-3 flex-shrink-0"></i>
+                    <div>
+                        <div class="fw-bold text-dark mb-1">DSpace Remains the Single Source of Truth</div>
+                        <p class="small text-secondary mb-0">
+                            This platform does not host independent files or duplicate full-text documents. Every research item displays permanent handles, official DSpace UUIDs, and direct hyperlinks back to the primary repository record on <code>idr.kab.ac.ug</code>.
+                        </p>
+                    </div>
+                </div>
+                <p class="text-secondary small mb-0" style="line-height: 1.6;">
+                    The platform queries DSpace 9.x HAL+JSON endpoints, specifically:
+                </p>
+                <ul class="text-secondary small mt-2 mb-0">
+                    <li><code>/server/api/discover/search/objects</code>: Paginated discovery search</li>
+                    <li><code>/server/api/core/communities/{uuid}</code>: Target Postgraduate Community</li>
+                    <li><code>/server/api/core/collections/{uuid}</code>: Faculty & institute collections</li>
+                </ul>
+            </div>
+
+            <!-- Similarity Methodology: TF-IDF & Cosine Similarity -->
+            <div class="card academic-card p-4 mb-4">
+                <h4 class="fw-bold text-dark mb-3">3. Related Research Methodology (TF-IDF & Cosine Similarity)</h4>
+                <p class="text-secondary" style="line-height: 1.7;">
+                    Unlike systems that rely on opaque generative AI models, our <strong>Related Research Engine</strong> uses conventional, peer-reviewed computational text analysis:
+                </p>
+
+                <div class="row g-3 my-2">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <h6 class="fw-bold text-dark"><i class="bi bi-cpu text-success me-1"></i> TF-IDF Vectorization</h6>
+                            <p class="small text-secondary mb-0">
+                                Evaluates Term Frequency-Inverse Document Frequency across concatenated titles, abstracts, subject keywords, and academic faculties. Common English and institutional stopwords are removed to isolate high-information conceptual descriptors.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <h6 class="fw-bold text-dark"><i class="bi bi-bounding-box-circles text-warning me-1"></i> Cosine Similarity Metric</h6>
+                            <p class="small text-secondary mb-0">
+                                Measures the cosine of the angle between high-dimensional document vectors in Euclidean space. A score of 1.0 represents vector identity, while scores closer to 0 represent orthogonal topical profiles.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-secondary bg-light border-0 small text-muted mt-3 mb-0">
+                    <strong>Academic Caveat:</strong> Textual similarity measures vocabulary overlap and shared subject classification; it does not infer identical findings, academic agreement, or methodological equivalence.
+                </div>
+            </div>
+
+            <!-- Research Coverage Definition -->
+            <div class="card academic-card p-4 mb-4">
+                <h4 class="fw-bold text-dark mb-3">4. Research Coverage Analysis & Caveats</h4>
+                <p class="text-secondary" style="line-height: 1.7;">
+                    The <strong>Research Coverage</strong> module measures relative topic representation <em>only across records indexed in the Kabale University repository</em>.
+                </p>
+                <p class="text-secondary small" style="line-height: 1.6;">
+                    If an area is designated as "Low Repository Coverage," this indicates that few postgraduate theses in the indexed collection have focused on that topic. It must <strong>never</strong> be interpreted as a claim that no scientific research exists in the wider global academic literature.
+                </p>
+            </div>
+        </div>
+
+        <!-- Sidebar Specifications -->
+        <div class="col-lg-4">
+            <div class="card academic-card p-3 mb-4">
+                <div class="card-header card-header-academic py-2 px-0 bg-transparent fw-bold small text-uppercase">
+                    <i class="bi bi-hdd-network me-1 text-success"></i> Integration Specs
+                </div>
+                <div class="list-group list-group-flush small">
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Institution:</span>
+                        <strong class="text-dark">Kabale University, Uganda</strong>
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Backend Engine:</span>
+                        <span class="text-dark">Django 5.x &amp; PostgreSQL / SQLite</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">DSpace Repository API:</span>
+                        <a href="https://backend.kab.ac.ug/server/api" target="_blank" rel="noopener" class="text-success text-break">backend.kab.ac.ug/server/api</a>
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Target Community UUID:</span>
+                        <code class="small text-dark font-monospace" style="font-size: 0.75rem;">95cbea8b-fdc6-4d8a-9f20-d51ad2814f12</code>
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Target Scope:</span>
+                        <span class="text-dark">Directorate of Postgraduate Studies</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if latest_sync %}
+            <div class="card academic-card p-3 mb-4 bg-light">
+                <h6 class="fw-bold text-dark mb-2">
+                    <i class="bi bi-clock-history text-success me-1"></i> Last Synchronization
+                </h6>
+                <div class="small text-secondary">
+                    <div><strong>Date:</strong> {{ latest_sync.started_at|date:"Y-m-d H:i" }} UTC</div>
+                    <div><strong>Items Synced:</strong> {{ latest_sync.records_created|add:latest_sync.records_updated }} records</div>
+                    <div><strong>Status:</strong> <span class="badge bg-success">{{ latest_sync.status|title }}</span></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

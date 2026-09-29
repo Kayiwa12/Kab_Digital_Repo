@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Synchronization Audit Logs | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-success text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}" class="text-success text-decoration-none">Admin Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Sync Audit Logs</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Synchronization Audit Logs</h2>
+            <p class="text-muted small mb-0">Detailed event history and error diagnostics from all DSpace synchronization runs.</p>
+        </div>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card academic-card p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Started</th>
+                        <th>Completed</th>
+                        <th>Triggered By</th>
+                        <th>Status</th>
+                        <th>Discovered</th>
+                        <th>Created</th>
+                        <th>Updated</th>
+                        <th>Duration</th>
+                        <th>Errors / Messages</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>#{{ log.id }}</td>
+                        <td>{{ log.started_at|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ log.completed_at|date:"Y-m-d H:i:s"|default:"Running..." }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ log.triggered_by }}</span></td>
+                        <td>
+                            <span class="badge bg-{% if log.status == 'success' %}success{% elif log.status == 'partial' %}warning{% else %}danger{% endif %}">
+                                {{ log.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ log.records_discovered }}</td>
+                        <td class="text-success fw-bold">+{{ log.records_created }}</td>
+                        <td class="text-primary">{{ log.records_updated }}</td>
+                        <td>{{ log.duration_seconds }}s</td>
+                        <td>
+                            {% if log.error_message %}
+                                <div class="text-danger small font-monospace" style="max-width: 300px; max-height: 80px; overflow-y: auto;">
+                                    {{ log.error_message }}
+                                </div>
+                            {% else %}
+                                <span class="text-success"><i class="bi bi-check-circle me-1"></i> None</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-4">No synchronization logs available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

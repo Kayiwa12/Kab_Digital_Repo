@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ item.title }} | Kabale University IDR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="fw-semibold" style="color: #0072bc;">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'research_list' %}" class="fw-semibold" style="color: #0072bc;">Research</a></li>
+            {% if item.faculty %}
+                <li class="breadcrumb-item"><a href="{% url 'research_list' %}?faculty={{ item.faculty.id }}" class="fw-semibold" style="color: #0072bc;">{{ item.faculty.name|truncatechars:35 }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active text-truncate text-black fw-bold" style="max-width: 300px;" aria-current="page">{{ item.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Main Research Content -->
+        <div class="col-lg-8">
+            <div class="card academic-card p-4 mb-4" style="border-top: 4px solid #0072bc;">
+                <!-- Badges & Type -->
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    {% if item.faculty_name %}
+                        <span class="badge badge-faculty">{{ item.faculty_name }}</span>
+                    {% endif %}
+                    <span class="badge badge-year">{{ item.publication_year|default:"Year Not Specified" }}</span>
+                    <span class="badge bg-light text-secondary border">{{ item.item_type|default:"Thesis" }}</span>
+                </div>
+
+                <!-- Title -->
+                <h2 class="fw-bold text-black mb-3" style="line-height: 1.35;">{{ item.title }}</h2>
+
+                <!-- Author(s) -->
+                <div class="mb-4 pb-3 border-bottom">
+                    <div class="text-muted small text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Author(s) / Researcher(s)</div>
+                    <div class="fs-5 text-dark mt-1 d-flex flex-wrap align-items-center gap-2">
+                        {% for author in item.authors.all %}
+                            <a href="{% url 'researcher_detail' author.id %}" class="badge text-bg-light border text-dark text-decoration-none py-2 px-3 fw-semibold">
+                                <i class="bi bi-person-fill me-1" style="color: #003399;"></i> {{ author.name }}
+                            </a>
+                        {% empty %}
+                            <span class="text-secondary">{{ item.authors_display|default:"Author information not available in repository metadata." }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Abstract -->
+                <div class="mb-4">
+                    <h5 class="fw-bold text-black mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-text" style="color: #003399;"></i> Abstract
+                    </h5>
+                    {% if item.abstract %}
+                        <div class="text-secondary" style="font-size: 1.02rem; line-height: 1.75; text-align: justify;">
+                            {{ item.abstract|linebreaks }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-light border text-muted small">
+                            <i class="bi bi-info-circle me-1"></i> Abstract not available for this record in the institutional repository.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Keywords & Subjects -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-black mb-2">Subjects & Keywords</h6>
+                    {% if item.keywords or item.subjects %}
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for kw in item.all_keywords %}
+                                <a href="{% url 'research_list' %}?q={{ kw|urlencode }}" class="badge-keyword px-3 py-2">
+                                    <i class="bi bi-tag-fill me-1 small" style="color: #003399;"></i> {{ kw }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <span class="text-muted small">No explicit keywords recorded in repository metadata.</span>
+                    {% endif %}
+                </div>
+
+                <!-- Authoritative DSpace Action Bar -->
+                <div class="p-3 bg-light rounded-3 border d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-4" style="border-left: 4px solid #f68b1f !important;">
+                    <div>
+                        <div class="fw-bold text-black" style="font-size: 0.95rem;">Authoritative Repository Record</div>
+                        <small class="text-muted">Directly access this item in Kabale University's official DSpace instance.</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ item.get_dspace_direct_url }}" target="_blank" rel="noopener noreferrer" class="btn kabale-green-btn fw-bold px-3 py-2 text-nowrap">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> View Original in DSpace
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Research Section (TF-IDF + Cosine Similarity) -->
+            <div id="related-research" class="card academic-card p-4 mb-4" style="border-top: 4px solid #006633;">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h4 class="fw-bold text-black mb-1 d-flex align-items-center gap-2">
+                            <i class="bi bi-diagram-3-fill" style="color: #006633;"></i> Related Research
+                        </h4>
+                        <p class="text-muted small mb-0">
+                            Empirically connected studies identified via TF-IDF vectorization and Cosine Similarity across indexed text and metadata.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Academic Disclosure Notice (Section 13) -->
+                <div class="alert alert-secondary bg-light border-0 py-2 px-3 small text-muted my-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    <span>Similarity is calculated from textual and metadata similarity between indexed research records. It does not imply identical research conclusions or scientific equivalence.</span>
+                </div>
+
+                {% if similar_records %}
+                    <div class="d-flex flex-column gap-3 mt-2">
+                        {% for sim in similar_records %}
+                        <div class="border rounded p-3 bg-white hover-shadow transition">
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                <span class="similarity-score-pill">
+                                    <i class="bi bi-check2-circle"></i> {{ sim.score_normalized }}% textual match
+                                </span>
+                                <span class="badge badge-year">{{ sim.item.publication_year|default:"N/A" }}</span>
+                            </div>
+
+                            <h6 class="fw-bold mb-1">
+                                <a href="{% url 'research_detail' sim.item.dspace_uuid %}" class="text-dark text-decoration-none hover-underline">
+                                    {{ sim.item.title }}
+                                </a>
+                            </h6>
+
+                            <div class="small text-muted mb-2">
+                                <span><i class="bi bi-person me-1"></i> {{ sim.item.authors_display|truncatechars:60 }}</span>
+                                {% if sim.item.faculty_name %}
+                                    <span class="mx-1">&middot;</span>
+                                    <span>{{ sim.item.faculty_name }}</span>
+                                {% endif %}
+                            </div>
+
+                            {% if sim.common_terms %}
+                            <div class="small text-secondary mb-2 d-flex align-items-center gap-1 flex-wrap">
+                                <span class="fw-semibold text-muted" style="font-size: 0.75rem;">Shared Concepts:</span>
+                                {% for term in sim.common_terms %}
+                                    <span class="badge bg-light text-dark border py-1">{{ term }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <a href="{% url 'research_detail' sim.item.dspace_uuid %}" class="small fw-semibold text-decoration-none" style="color: #003399;">
+                                    View Related Research <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                                <a href="{{ sim.item.get_dspace_direct_url }}" target="_blank" rel="noopener noreferrer" class="small text-secondary text-decoration-none">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> DSpace
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- Empty State for Similarity -->
+                    <div class="text-center py-4 text-muted small">
+                        <i class="bi bi-diagram-2 display-6 opacity-25 d-block mb-2"></i>
+                        No closely related research was found based on the textual representation of this record.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar: Citation, Metadata & DSpace Info -->
+        <div class="col-lg-4">
+            <!-- Metadata Specifications Card -->
+            <div class="card academic-card p-3 mb-4">
+                <div class="card-header card-header-academic py-2 px-0 bg-transparent fw-bold small text-uppercase">
+                    <i class="bi bi-card-checklist me-1" style="color: #003399;"></i> Repository Metadata
+                </div>
+                <div class="list-group list-group-flush small">
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Academic Unit / Faculty:</span>
+                        <strong class="text-black">{{ item.faculty_name|default:"Not specified" }}</strong>
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Repository Collection:</span>
+                        <span class="text-black">{{ item.collection_name|default:item.community }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Publication Year:</span>
+                        <strong class="text-black">{{ item.publication_year|default:"Not recorded" }}</strong>
+                        {% if item.date_issued %}<small class="text-muted">({{ item.date_issued }})</small>{% endif %}
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Document / Thesis Type:</span>
+                        <span class="text-black">{{ item.item_type }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Permanent Handle:</span>
+                        {% if item.handle %}
+                            <div class="d-flex align-items-center justify-content-between mt-1">
+                                <code class="small fw-bold" style="color: #006633;">{{ item.handle }}</code>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 copy-handle-btn" data-handle="{{ item.handle }}">
+                                    Copy
+                                </button>
+                            </div>
+                        {% else %}
+                            <span class="text-muted">Not assigned</span>
+                        {% endif %}
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">DSpace Item UUID:</span>
+                        <code class="small text-muted font-monospace" style="font-size: 0.75rem;">{{ item.dspace_uuid }}</code>
+                    </div>
+                    <div class="list-group-item px-0 py-2">
+                        <span class="text-muted d-block">Last Synchronized:</span>
+                        <span class="text-secondary">{{ item.last_synced|date:"Y-m-d H:i:s" }} UTC</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Citation Generator Card -->
+            <div class="card academic-card p-3 mb-4 bg-light">
+                <h6 class="fw-bold text-black mb-2">
+                    <i class="bi bi-quote me-1" style="color: #003399;"></i> Academic Citation (APA)
+                </h6>
+                <div class="p-2 bg-white rounded border small text-secondary font-monospace" style="font-size: 0.8rem; line-height: 1.5; border-left: 3px solid #FFCC00 !important;">
+                    {{ item.authors_display }} ({{ item.publication_year|default:"n.d." }}). <em>{{ item.title }}</em> [Master's thesis, Kabale University]. Kabale University Institutional Digital Repository. {% if item.handle %}http://hdl.handle.net/{{ item.handle }}{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Enhanced Research Discovery & Analytics | Kabale University IDR{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-portal text-center">
+    <div class="container py-4">
+        <!-- University Crest Graphic -->
+        <div class="mb-3 d-flex justify-content-center">
+            <div class="p-2 rounded-circle bg-white shadow d-inline-flex align-items-center justify-content-center" style="border: 3px solid #f68b1f; box-shadow: 0 6px 18px rgba(0,0,0,0.25) !important;">
+                <img src="{% static 'img/kabale-logo.png' %}" alt="Kabale University Crest" height="92" width="92">
+            </div>
+        </div>
+
+        <div class="hero-subtitle mb-2">Kabale University Institutional Digital Repository</div>
+        <h1 class="display-5 fw-bold text-white mb-3" style="letter-spacing: -0.5px;">Enhanced Research Discovery &amp; Analytics</h1>
+        <p class="lead text-light opacity-90 mx-auto mb-4" style="max-width: 760px; font-size: 1.15rem;">
+            Discover, explore and analyze research from Kabale University. Connecting scholars, postgraduate dissertations, and institutional knowledge through real-time repository intelligence.
+        </p>
+
+        <!-- Prominent Hero Search Form -->
+        <div class="mx-auto mb-4" style="max-width: 820px;">
+            <form action="{% url 'research_list' %}" method="get" class="p-2 bg-white rounded-3 shadow-lg border border-2" style="border-color: #f68b1f !important;">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white border-0 ps-3" style="color: #0072bc;">
+                        <i class="bi bi-search fs-5"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-0 shadow-none ps-2" placeholder="Search research title, author, abstract, or topic (e.g., Accounting, Cybersecurity, Health)..." aria-label="Search research records" autofocus>
+                    <button class="btn kabale-green-btn px-4 fw-bold" type="submit">
+                        <i class="bi bi-search me-1"></i> Search Research
+                    </button>
+                </div>
+            </form>
+            <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-3 text-light small">
+                <span class="opacity-90 fw-semibold" style="color: #fec756;">Popular Topics:</span>
+                {% for kw in top_keywords %}
+                    <a href="{% url 'research_list' %}?q={{ kw|urlencode }}" class="badge text-bg-light text-decoration-none py-1 px-2 border" style="border-color: #cbd5e1 !important; color: #000000 !important;">
+                        {{ kw }}
+                    </a>
+                {% empty %}
+                    <span class="opacity-50">Synchronize repository to view topics</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Hero Action Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-2">
+            <a href="{% url 'research_list' %}" class="btn btn-outline-light px-4 py-2 fw-semibold">
+                <i class="bi bi-journal-text me-2"></i> Browse All Research
+            </a>
+            <a href="{% url 'analytics' %}" class="btn kabale-green-btn px-4 py-2">
+                <i class="bi bi-graph-up-arrow me-2"></i> Explore Analytics
+            </a>
+            <a href="{% url 'coverage' %}" class="btn kabale-orange-btn px-4 py-2 fw-semibold">
+                <i class="bi bi-pie-chart me-2"></i> Research Coverage
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Live Empirical Repository Statistics -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <div class="kpi-box">
+                    <div class="kpi-value">{{ stats.total_records }}</div>
+                    <div class="kpi-label">Research Records</div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Indexed from DSpace</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="kpi-box gold-accent">
+                    <div class="kpi-value">{{ stats.total_researchers }}</div>
+                    <div class="kpi-label">Researchers</div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Extracted Authors</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="kpi-box">
+                    <div class="kpi-value">{{ stats.total_faculties }}</div>
+                    <div class="kpi-label">Faculties & Institutes</div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Academic Units</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="kpi-box gold-accent">
+                    <div class="kpi-value">{{ stats.total_collections }}</div>
+                    <div class="kpi-label">Collections</div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">IDR Collections</small>
+                </div>
+            </div>
+        </div>
+
+        {% if stats.total_records == 0 %}
+        <div class="alert alert-warning d-flex align-items-center justify-content-between mt-3 mb-0" role="alert">
+            <div>
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                <strong>Initial Setup Notice:</strong> The local database has not yet been synchronized with Kabale University's DSpace API.
+            </div>
+            {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-dark">
+                Go to Admin Dashboard to Sync
+            </a>
+            {% else %}
+            <a href="{% url 'admin:login' %}?next={% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-dark">
+                Admin Sign-In to Synchronize
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Core Capability Pillars -->
+<section class="py-5">
+    <div class="container">
+        <div class="section-title-wrapper text-center mb-5">
+            <h2 class="section-title">Intelligent Repository Capabilities</h2>
+            <p class="text-muted small mt-2">Enhanced capabilities built atop the authoritative Kabale University DSpace REST API</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 academic-card p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 p-3 mb-3" style="width: 54px; height: 54px; background-color: #eaf0fa; color: #003399; border: 1px solid rgba(0, 51, 153, 0.2);">
+                        <i class="bi bi-search fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-black mb-2">Discover Research</h5>
+                    <p class="text-muted small mb-3">
+                        Search and filter research across titles, abstracts, authors, and keywords with multi-attribute filtering by faculty, collection, and publication year.
+                    </p>
+                    <a href="{% url 'research_list' %}" class="mt-auto small fw-bold text-decoration-none" style="color: #003399;">
+                        Browse Repository <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 academic-card p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 p-3 mb-3" style="width: 54px; height: 54px; background-color: #e6f4ed; color: #006633; border: 1px solid rgba(0, 102, 51, 0.2);">
+                        <i class="bi bi-diagram-3 fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-black mb-2">Connect Related Research</h5>
+                    <p class="text-muted small mb-3">
+                        Find similar and complementary research using conventional TF-IDF vectorization and Cosine Similarity without depending on external generative AI.
+                    </p>
+                    <a href="{% url 'about' %}" class="mt-auto small fw-bold text-decoration-none" style="color: #006633;">
+                        Read Methodology <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 academic-card p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 p-3 mb-3" style="width: 54px; height: 54px; background-color: #fff9e6; color: #b38600; border: 1px solid #FFCC00;">
+                        <i class="bi bi-graph-up fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-black mb-2">Understand Research Trends</h5>
+                    <p class="text-muted small mb-3">
+                        Explore research output over time, track institutional topic momentum, and visualize the emergence of key subject domains across academic faculties.
+                    </p>
+                    <a href="{% url 'trends' %}" class="mt-auto small fw-bold text-decoration-none" style="color: #003399;">
+                        Explore Trends <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 academic-card p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 p-3 mb-3" style="width: 54px; height: 54px; background-color: #eaf0fa; color: #003399; border: 1px solid rgba(0, 51, 153, 0.2);">
+                        <i class="bi bi-pie-chart fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-black mb-2">Explore Research Coverage</h5>
+                    <p class="text-muted small mb-3">
+                        Identify research areas that are relatively underrepresented in the indexed repository dataset using empirical bibliometric metrics and safe academic qualifiers.
+                    </p>
+                    <a href="{% url 'coverage' %}" class="mt-auto small fw-bold text-decoration-none" style="color: #003399;">
+                        View Coverage <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recently Synchronized Research -->
+{% if recent_items %}
+<section class="py-5 bg-white border-top border-bottom">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <div class="text-uppercase fw-bold small" style="color: #003399; letter-spacing: 0.5px;">Live Synchronized Records</div>
+                <h3 class="fw-bold text-black mb-0">Recently Synchronized Postgraduate Research</h3>
+            </div>
+            <a href="{% url 'research_list' %}" class="btn btn-sm kabale-blue-btn">
+                View All Records ({{ stats.total_records }}) <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for item in recent_items %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 academic-card p-3 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        {% if item.faculty_name %}
+                            <span class="badge badge-faculty text-truncate" style="max-width: 75%;" title="{{ item.faculty_name }}">
+                                {{ item.faculty_name }}
+                            </span>
+                        {% else %}
+                            <span class="badge badge-faculty">Kabale University</span>
+                        {% endif %}
+                        <span class="badge badge-year">{{ item.publication_year|default:"N/A" }}</span>
+                    </div>
+
+                    <h6 class="fw-bold text-dark mb-2" style="line-height: 1.4;">
+                        <a href="{% url 'research_detail' item.dspace_uuid %}" class="text-dark text-decoration-none hover-underline">
+                            {{ item.title }}
+                        </a>
+                    </h6>
+
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-person me-1 text-secondary"></i> {{ item.authors_display|truncatechars:50 }}
+                    </p>
+
+                    <p class="text-secondary small flex-grow-1 mb-3" style="line-height: 1.5;">
+                        {{ item.short_abstract|truncatechars:140 }}
+                    </p>
+
+                    <div class="pt-2 border-top d-flex justify-content-between align-items-center mt-auto">
+                        <a href="{% url 'research_detail' item.dspace_uuid %}" class="btn btn-sm kabale-green-btn py-1 px-2" style="font-size: 0.78rem;">
+                            <i class="bi bi-eye me-1"></i> View Research
+                        </a>
+                        <a href="{{ item.get_dspace_direct_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.78rem;" title="Open authoritative record in Kabale DSpace">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> DSpace Record
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Academic Faculties Distribution Overview -->
+<section class="py-5">
+    <div class="container">
+        <div class="section-title-wrapper mb-4">
+            <h3 class="section-title">Faculties & Academic Units</h3>
+            <p class="text-muted small mt-2">Explore postgraduate masters research produced across Kabale University faculties</p>
+        </div>
+
+        <div class="row g-3">
+            {% for fac in faculties %}
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'research_list' %}?faculty={{ fac.id }}" class="card academic-card p-3 text-decoration-none text-dark h-100 d-flex flex-row align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 rounded" style="background-color: #eaf0fa; color: #003399;">
+                            <i class="bi bi-building fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-black" style="font-size: 0.95rem;">{{ fac.name }}</div>
+                            {% if fac.code %}<span class="badge" style="background-color: #003399; color: #FFFFFF;">{{ fac.code }}</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge rounded-pill px-3 py-2 fw-bold fs-6" style="background-color: #006633; color: #FFFFFF;">
+                            {{ fac.item_count }}
+                        </span>
+                        <small class="d-block text-muted" style="font-size: 0.7rem;">theses</small>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center text-muted py-4">
+                No faculty records indexed yet. Run synchronization to populate academic units.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
