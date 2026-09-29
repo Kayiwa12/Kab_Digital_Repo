@@ -15,7 +15,7 @@ let isShuttingDown = false;
 
 function ensurePythonEnvironment(): void {
   try {
-    execSync("python3 -c 'import django, rest_framework, sklearn, pandas'", { stdio: "ignore" });
+    execSync("python3 -c 'import django, rest_framework, sklearn, whitenoise'", { stdio: "ignore" });
     console.log("[Proxy] Python environment and Django dependencies verified.");
   } catch {
     console.log("[Proxy] Python environment incomplete. Auto-installing required packages...");

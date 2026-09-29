@@ -10,7 +10,7 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'kabale-idr-discovery-secure-key-default-382910')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-allowed_hosts_str = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,.run.app,*')
+allowed_hosts_str = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,.run.app,.vercel.app,*')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_str.split(',') if h.strip()]
 
 INSTALLED_APPS = [
@@ -27,6 +27,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -55,10 +56,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'kabale_repo.wsgi.application'
 
+# Serverless / Read-only filesystem support (Vercel, AWS Lambda, etc.)
+if os.getenv('VERCEL') == '1' or not os.access(BASE_DIR, os.W_OK):
+    import shutil
+    tmp_db = Path('/tmp/db.sqlite3')
+    orig_db = BASE_DIR / 'db.sqlite3'
+    if not tmp_db.exists() and orig_db.exists():
+        try:
+            shutil.copy2(orig_db, tmp_db)
+        except Exception:
+            pass
+    DB_FILE = tmp_db if tmp_db.exists() else orig_db
+else:
+    DB_FILE = BASE_DIR / 'db.sqlite3'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DB_FILE,
     }
 }
 
@@ -87,6 +102,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'research' / 'static',
 ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -103,6 +119,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.google.com',
     'https://*.aistudio.google.com',
     'https://*.googleusercontent.com',
+    'https://*.vercel.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:8888',

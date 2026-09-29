@@ -2,5 +2,5 @@ Django>=5.0,<6.0
 djangorestframework>=3.14.0
 requests>=2.31.0
 scikit-learn>=1.4.0
-pandas>=2.2.0
+whitenoise>=6.6.0
 python-dotenv>=1.0.0
